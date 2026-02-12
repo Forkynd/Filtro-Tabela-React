@@ -1,0 +1,34 @@
+import { FormAbertura } from "./Abertura";
+import TabelaPrincipal from "./TabelaAcompanhamento";
+import TabelaAcompanhamento from "./TabelaFigma";
+
+type AcompanhamentoProps = {
+  dados: FormAbertura;
+};
+export default function Acompanhamento({ dados }: AcompanhamentoProps) {
+  if (!dados) {
+    return (
+      <p>
+        <strong>Nenhum dado enviado ainda.</strong>
+      </p>
+    );
+  }
+
+  return (
+    <>
+      <TabelaAcompanhamento dados={[dados]} />
+      <TabelaPrincipal />
+      <div>
+        <ul>
+          {dados.arquivo.map((arq, i) => (
+            <li key={i}>
+              <a href={arq.url} target="_blank">
+                <strong>{arq.file.name}</strong>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </>
+  );
+}
