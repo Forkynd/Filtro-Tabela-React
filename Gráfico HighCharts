@@ -1,0 +1,128 @@
+import Highcharts from "highcharts";
+import HighchartsReact from "highcharts-react-official";
+import { useMemo } from "react";
+import { Box, Typography } from "@mui/material";
+
+import type { FormAbertura } from "./Abertura";
+import { statusConfig } from "./ConstSolicitacoes";
+
+interface StatusChartProps {
+  dados?: FormAbertura[]; // pode vir vazio/undefined
+}
+
+export default function GraficoStatus({ dados }: StatusChartProps) {
+  // Garante que sempre trabalhamos com array (evita undefined)
+  const lista = dados ?? [];
+
+  // Transforma a lista em dados agregados para o gráfico
+  const dadosGrafico = useMemo(() => {
+    const contador: Record<number, number> = {};
+
+    for (const item of lista) {
+      const status = item.id_status;
+      if (status != null) {
+        contador[status] = (contador[status] ?? 0) + 1;
+      }
+    }
+
+    return Object.entries(contador).map(([status, quantidade]) => {
+      const { label, backgroundColor } = statusConfig(Number(status));
+
+      return {
+        name: label,
+        y: quantidade,
+        color: backgroundColor,
+      };
+    });
+  }, [lista]);
+
+  // 3) Monta as opções do Highcharts com memo também
+  const options: Highcharts.Options = useMemo(
+    () => ({
+      chart: {
+        type: "column",
+        backgroundColor: "#fcf9ff", // Fundo do gráfico
+      },
+
+      title: {
+        text: "Solicitações por Status",
+        style: {
+          color: "#3c0d6e",
+          fontWeight: "bold",
+          fontSize: "20px",
+        },
+      },
+
+      xAxis: {
+        categories: [
+          "Aberto",
+          "Em análise",
+          "Devolvido",
+          "Desenvolvimento",
+          "Concluída",
+          "Cancelada",
+          "Paralisado",
+        ],
+        labels: {
+          style: {
+            fontWeight: "bold",
+            color: "#555",
+          },
+        },
+
+        lineWidth: 2,
+        lineColor: "#3c0d6e",
+      },
+
+      yAxis: {
+        title: {
+          text: "",
+          style: {
+            fontWeight: "bold",
+          },
+        },
+        gridLineColor: "#e7e6e6",
+      },
+
+      tooltip: {
+        borderRadius: 6,
+        shadow: true,
+        pointFormat: `Quantidade: <b>{point.y}</b>`,
+      },
+
+      plotOptions: {
+        column: {
+          borderRadius: 6,
+          shadow: false,
+          borderWidth: 1,
+          borderColor: "rgba(0,0,0,0.08)",
+          dataLabels: {
+            enabled: true,
+            style: {
+              fontWeight: "bold",
+            },
+          },
+        },
+      },
+      credits: { enabled: false },
+
+      legend: {
+        enabled: false,
+      },
+
+      series: [
+        {
+          type: "column",
+          data: dadosGrafico,
+        },
+      ],
+    }),
+    [dadosGrafico],
+  );
+
+  return (
+    <Box sx={{ mt: 4 }}>
+      <HighchartsReact highcharts={Highcharts} options={options} />
+    </Box>
+  );
+}
